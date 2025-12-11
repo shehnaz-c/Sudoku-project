@@ -1,0 +1,143 @@
+/* sudoku.c
+   Beginner-friendly Sudoku solver in C (single .c file)
+   Team: (AP25110011014
+          AP25110011015
+          AP25110010969
+          AP25110010970)
+   Date: (10-12-2025)
+
+   What this program does:
+   - Solves a 9x9 Sudoku puzzle entered by the user.
+   - Uses simple backtracking (easy to understand).
+   - No sample puzzle. User must enter all 81 numbers.
+*/
+
+#include <stdio.h>
+
+#define N 9   /* Sudoku is 9x9 */
+
+/* ---------------- STEP 1: Print Sudoku board ---------------- */
+void printBoard(int board[N][N]) {
+    int row, col;
+    printf("\n+-------+-------+-------+\n");
+    for (row = 0; row < N; row++) {
+        printf("| ");
+        for (col = 0; col < N; col++) {
+            if (board[row][col] == 0)
+                printf(". ");  // empty cell
+            else
+                printf("%d ", board[row][col]);
+
+            if ((col + 1) % 3 == 0)
+                printf("| ");
+        }
+        printf("\n");
+        if ((row + 1) % 3 == 0)
+            printf("+-------+-------+-------+\n");
+    }
+}
+
+/* ---------------- STEP 2: Find first empty cell ---------------- */
+int findEmptyCell(int board[N][N], int *row, int *col) {
+    int r, c;
+    for (r = 0; r < N; r++) {
+        for (c = 0; c < N; c++) {
+            if (board[r][c] == 0) {
+                *row = r;
+                *col = c;
+                return 1; // found
+            }
+        }
+    }
+    return 0; // no empty cell
+}
+
+/* ---------------- STEP 3: Safety checks ---------------- */
+int isInRow(int board[N][N], int row, int num) {
+    int c;
+    for (c = 0; c < N; c++)
+        if (board[row][c] == num) return 1;
+    return 0;
+}
+
+int isInCol(int board[N][N], int col, int num) {
+    int r;
+    for (r = 0; r < N; r++)
+        if (board[r][col] == num) return 1;
+    return 0;
+}
+
+int isInBox(int board[N][N], int startRow, int startCol, int num) {
+    int r, c;
+    for (r = 0; r < 3; r++)
+        for (c = 0; c < 3; c++)
+            if (board[startRow + r][startCol + c] == num) return 1;
+    return 0;
+}
+
+int isSafe(int board[N][N], int row, int col, int num) {
+    if (isInRow(board, row, num)) return 0;
+    if (isInCol(board, col, num)) return 0;
+    if (isInBox(board, row - row % 3, col - col % 3, num)) return 0;
+    return 1;
+}
+
+/* ---------------- STEP 4: Backtracking Sudoku solver ---------------- */
+int solveSudoku(int board[N][N]) {
+    int row, col;
+
+    if (!findEmptyCell(board, &row, &col))
+        return 1; // solved
+
+    int num;
+    for (num = 1; num <= 9; num++) {
+        if (isSafe(board, row, col, num)) {
+            board[row][col] = num; // place number
+
+            if (solveSudoku(board))
+                return 1; // solved
+
+            board[row][col] = 0; // undo — backtrack
+        }
+    }
+    return 0; // no valid number
+}
+
+/* ---------------- STEP 5: Read puzzle from user ---------------- */
+void readPuzzleFromUser(int board[N][N]) {
+    int r, c, val;
+    printf("\nEnter your Sudoku puzzle:\n");
+    printf("Type 9 numbers for each row (use 0 for empty cells).\n");
+    printf("Example row: 5 3 0 0 7 0 0 0 0\n\n");
+
+    for (r = 0; r < N; r++) {
+        printf("Row %d: ", r + 1);
+        for (c = 0; c < N; c++) {
+            scanf("%d", &val);
+            if (val < 0 || val > 9) val = 0; // invalid → treat as empty
+            board[r][c] = val;
+        }
+    }
+}
+
+/* ---------------- MAIN PROGRAM ---------------- */
+int main() {
+    int board[N][N];
+
+    printf("Sudoku Solver (User Input Only)\n");
+    printf("------------------------------\n");
+
+    readPuzzleFromUser(board);
+
+    printf("\nYour entered puzzle:\n");
+    printBoard(board);
+
+    if (solveSudoku(board)) {
+        printf("\nSolved Sudoku:\n");
+        printBoard(board);
+    } else {
+        printf("\nNo valid solution exists for this puzzle.\n");
+    }
+
+    return 0;
+}
